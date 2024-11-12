@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>진짜최종게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            /*background-image: url("image/배경모음/배경_방_예시2.png");*/
+            background-color: #ffe0e6;
+        }
+
+        /*======================================================================================*/
+        #video-container, #game-container {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: none; /* 처음에는 두 컨테이너 모두 숨김 */
+        }
+
+        #video-container {
+            display: block; /* 로드 시 비디오 컨테이너 표시 */
+            z-index: 10000;
+        }
+
+        /* 비디오 화면 크기 맞추기 */
+        #intro-video {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.1);
+            object-fit: cover;
+        }
+
+
+
+        /*======================================================================================*/
+        /* 버튼 */
+        .btns {
+            display: flex;
+            justify-content: flex-end; /* 오른쪽 정렬 */
+            list-style-type: none;
+            position: fixed; /* 화면 고정 */
+            right: 0; /* 오른쪽에 붙임 */
+            top: 0; /* 위쪽에 붙임 */
+            margin: 10px; /* 버튼에 약간의 마진 추가 */
+            z-index: 9999;
+        }
+        .btns li {
+            padding: 5px;
+        }
+        .btns li img {
+            width: 50px;
+            height: auto;
+        }
+        .replay {
+            transition: 0.3s ease;
+        }
+
+        .replay:hover {
+            content: url("image/버튼모음/버튼_호버_원래대로.png");
+        }
+        .popup_toggle {
+            transition: 0.3s ease;
+        }
+
+        .popup_toggle:hover {
+            content: url("image/버튼모음/버튼_호버_팝업버튼.png");
+        }
+
+
+        /* 팝업창 */
+        .popup {
+            display: none;
+            position: fixed; /* 화면 중앙에 고정 */
+            top: 50%; /* 화면의 중간 */
+            left: 50%; /* 화면의 중간 */
+            transform: translate(-50%, -50%); /* 중앙 정렬 */
+            z-index: 10000;
+            width: 80%; /* 고정된 너비 */
+            height: auto; /* 고정된 높이 */
+            background-size: cover; /* 팝업 이미지가 컨테이너에 맞춰지도록 설정 */
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* 팝업 이미지 */
+        .popup img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 이미지를 팝업창에 맞추기 위해 크기 조절 */
+        }
+
+        .popup.visible {
+            display: block;
+        }
+
+
+        /* 화면 캡쳐 - 플래시 효과 */
+        .flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            z-index: 999999;
+            pointer-events: none;
+        }
+
+        .flash.active {
+            animation: flashAnimation 0.5s ease-in-out;
+        }
+
+        @keyframes flashAnimation {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+
+        .capture:hover {
+            content: url("image/버튼모음/버튼_호버_캡쳐.png");
+        }
+
+
+
+        /*======================================================================================*/
+        /* 배경 */
+        /*#back {*/
+        /*    position: absolute;*/
+        /*    z-index: 0; !* 가장 낮은 z-index 값 *!*/
+        /*}*/
+
+        .thumb {
+            display: flex;
+            flex-direction: column; /* 세로로 정렬 */
+            align-items: center; /* 중앙 정렬 */
+            list-style: none;
+            margin: 53px 0 0 990px;
+            position: fixed;
+            z-index: 9999;
+        }
+
+        .thumb li {
+            display: flex;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            overflow: hidden;
+            cursor: pointer;
+            margin-bottom: 5px; /* 각 li 요소 사이에 간격 추가 */
+        }
+
+        .thumb img {
+            width: 30px;
+            height: 30px;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            border: 2px solid #ff73ac;
+        }
+        /*======================================================================================*/
+        /* 옷장 */
+        #closet {
+            position: absolute;
+            z-index: 1;
+        }
+
+
+
+        /*======================================================================================*/
+
+        /* 모델 선택 메뉴 스타일 */
+        .model-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            z-index: 1;
+            top: 150px; /* 위치 조정 */
+            left: 75%; /* 오른쪽으로 이동 (예: 70%는 화면의 오른쪽) */
+            transform: translateX(-50%);
+            width: 100%;
+        }
+
+        .model {
+            display: flex;
+            overflow: hidden;
+            width: 300px; /* 너비 조정 */
+        }
+
+        .model-img {
+            width: 300px; /* 각 모델 이미지의 너비 조정 */
+            height: auto;
+            margin: 0 5px;
+        }
+
+        .slide-button {
+            background-color: transparent;
+            border: none;
+            /*font-size: 2em;*/
+            cursor: pointer;
+        }
+        .slide-button img {
+            width: 70px;
+        }
+        #slide-left img:hover {
+            content: url("image/버튼모음/버튼_호버_왼쪽.png");
+        }
+        #slide-right img:hover {
+            content: url("image/버튼모음/버튼_호버_오른쪽.png");
+        }
+
+
+
+
+
+
+
+        /*======================================================================================*/
+        /* 옷 아이템 */
+
+        .hairs {
+            position: absolute;
+            z-index: 10;
+        }
+        .tops {
+            position: absolute;
+            z-index: 5;
+        }
+        .bottoms {
+            position: absolute;
+            z-index: 4;
+        }
+        .socks {
+            position: absolute;
+            z-index: 2;
+        }
+        .shoes {
+            position: absolute;
+            z-index: 3;
+        }
+        .outers {
+            position: absolute;
+            z-index: 6;
+        }
+        .accs {
+            position: absolute;
+            z-index: 7;
+        }
+        .hats {
+            position: absolute;
+            z-index: 12;
+        }
+        .hairs img, .tops img, .bottoms img, .socks img, .shoes img, .outers img, .accs img, .hats img {
+            width: 300px;
+            cursor: pointer;
+        }
+
+        .clothing-item {
+            position: absolute;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+
+
+<body>
+<!--=============================================================================================-->
+<!-- 비디오 컨테이너 -->
+<div id="video-container">
+    <video id="intro-video" width="100%" height="100%" autoplay muted>
+        <source src="image/게임그래픽/로딩중.mp4" type="video/mp4">
+    </video>
+</div>
+
+
+<!-- 게임 컨테이너 -->
+<div id="game-container">
+    <!--=============================================================================================-->
+    <!--배경 선택-->
+    <div class="box" id="backgroundBox"></div>
+
+    <ul class="thumb">
+        <li><img src="image/배경모음/배경1.png"></li>
+        <li><img src="image/배경모음/배경2.png"></li>
+        <li><img src="image/배경모음/배경3.png"></li>
+        <li><img src="image/배경모음/배경4.png"></li>
+        <li><img src="image/배경모음/배경5.png"></li>
+        <li><img src="image/배경모음/배경6.png"></li>
+        <li><img src="image/배경모음/배경7.png"></li>
+        <li><img src="image/배경모음/배경8.png"></li>
+    </ul>
+
+
+
+<!--    <img id="back" src="image/배경모음/배경_방_예시2.png">-->
+
+    <!--============================================================================================-->
+    <!--모델 이미지-->
+
+
+    <div id="closet">
+        <img src="image/배경모음/옷장.png">
+    </div>
+
+    <!--============================================================================================-->
+    <!--모델 이미지-->
+
+
+    <!-- 모델 선택 메뉴 -->
+    <div class="model-container">
+        <button class="slide-button" id="slide-left">
+            <img src="image/버튼모음/버튼_왼쪽.png">
+        </button>
+        <div class="model">
+            <img src="image/새모델모음/모델1.png" class="model-img">
+            <img src="image/새모델모음/모델2.png" class="model-img">
+            <img src="image/새모델모음/모델3.png" class="model-img">
+        </div>
+        <button class="slide-button" id="slide-right">
+            <img src="image/버튼모음/버튼_오른쪽.png">
+        </button>
+    </div>
+
+
+    <!--============================================================================================-->
+    <!-- 아이템 -->
+    <div class="slider-container">
+        <div class="hairs">
+            <img id="hair1" class="clothing-item" src="image/헤어모음/헤어_2.png" style="position:absolute; left:0; top:100px;" draggable="true">
+            <img id="hair2" class="clothing-item" src="image/헤어모음/헤어_7.png" style="position:absolute; left:60px; top:100px;" draggable="true">
+            <img id="hair3" class="clothing-item" src="image/헤어모음/헤어_3.png" style="position:absolute; left:120px; top:100px;" draggable="true">
+            <img id="hair4" class="clothing-item" src="image/헤어모음/헤어_5.png" style="position:absolute; left:180px; top:100px;" draggable="true">
+            <img id="hair5" class="clothing-item" src="image/헤어모음/헤어_6.png" style="position:absolute; left:240px; top:100px;" draggable="true">
+            <img id="hair6" class="clothing-item" src="image/헤어모음/헤어_8.png" style="position:absolute; left:300px; top:100px;" draggable="true">
+            <img id="hair7" class="clothing-item" src="image/헤어모음/헤어_4.png" style="position:absolute; left:360px; top:100px;" draggable="true">
+            <img id="hair8" class="clothing-item" src="image/헤어모음/헤어_9.png" style="position:absolute; left:420px; top:100px;" draggable="true">
+            <img id="hair9" class="clothing-item" src="image/헤어모음/헤어_1.png" style="position:absolute; left:480px; top:100px;" draggable="true">
+        </div>
+    </div>
+
+
+
+    <div class="tops">
+        <img id="top1" class="clothing-item" src="image/상의모음/상의_2.png" style="position:absolute; left:10px; top:310px;" draggable="true">
+        <img id="top2" class="clothing-item" src="image/상의모음/상의_6.png" style="position:absolute; left:90px; top:300px;" draggable="true">
+        <img id="top3" class="clothing-item" src="image/상의모음/상의_5.png" style="position:absolute; left:170px; top:300px;" draggable="true">
+        <img id="top4" class="clothing-item" src="image/상의모음/상의_4.png" style="position:absolute; left:250px; top:310px;" draggable="true">
+        <img id="top5" class="clothing-item" src="image/상의모음/상의_1.png" style="position:absolute; left:330px; top:310px;" draggable="true">
+        <img id="top6" class="clothing-item" src="image/상의모음/상의_3.png" style="position:absolute; left:410px; top:310px;" draggable="true">
+
+    </div>
+    <div class="bottoms">
+        <img id="bottom1" class="clothing-item" src="image/하의모음/하의_7.png" style="position:absolute; left:10px; top:450px;" draggable="true">
+        <img id="bottom2" class="clothing-item" src="image/하의모음/하의_2.png" style="position:absolute; left:80px; top:450px;" draggable="true">
+        <img id="bottom3" class="clothing-item" src="image/하의모음/하의_3.png" style="position:absolute; left:150px; top:450px;" draggable="true">
+        <img id="bottom4" class="clothing-item" src="image/하의모음/하의_4.png" style="position:absolute; left:220px; top:450px;" draggable="true">
+        <img id="bottom5" class="clothing-item" src="image/하의모음/하의_5.png" style="position:absolute; left:290px; top:450px;" draggable="true">
+        <img id="bottom6" class="clothing-item" src="image/하의모음/하의_6.png" style="position:absolute; left:360px; top:450px;" draggable="true">
+        <img id="bottom7" class="clothing-item" src="image/하의모음/하의_1.png" style="position:absolute; left:430px; top:430px;" draggable="true">
+    </div>
+    <div class="socks">
+        <img id="socks1" class="clothing-item" src="image/양말모음/양말_2.png" style="position:absolute; left:40px; top:730px;" draggable="true">
+        <img id="socks2" class="clothing-item" src="image/양말모음/양말_4.png" style="position:absolute; left:130px; top:730px;" draggable="true">
+        <img id="socks3" class="clothing-item" src="image/양말모음/양말_1.png" style="position:absolute; left:230px; top:680px;" draggable="true">
+        <img id="socks4" class="clothing-item" src="image/양말모음/양말_5.png" style="position:absolute; left:320px; top:650px;" draggable="true">
+        <img id="socks5" class="clothing-item" src="image/양말모음/양말_3.png" style="position:absolute; left:420px; top:470px;" draggable="true">
+    </div>
+    <div class="shoes">
+        <img id="shoes1" class="clothing-item" src="image/신발모음/신발_5.png" style="position:absolute; left:590px; top:690px;" draggable="true">
+        <img id="shoes2" class="clothing-item" src="image/신발모음/신발_2.png" style="position:absolute; left:650px; top:730px;" draggable="true">
+        <img id="shoes3" class="clothing-item" src="image/신발모음/신발_3.png" style="position:absolute; left:710px; top:730px;" draggable="true">
+        <img id="shoes4" class="clothing-item" src="image/신발모음/신발_4.png" style="position:absolute; left:590px; top:780px;" draggable="true">
+        <img id="shoes5" class="clothing-item" src="image/신발모음/신발_1.png" style="position:absolute; left:650px; top:795px;" draggable="true">
+        <img id="shoes6" class="clothing-item" src="image/신발모음/신발_6.png" style="position:absolute; left:710px; top:795px;" draggable="true">
+    </div>
+
+
+    <div class="outers">
+        <img id="outer1" class="clothing-item" src="image/아우터모음/아우터_3.png" style="position:absolute; left:600px; top:300px;" draggable="true">
+        <img id="outer2" class="clothing-item" src="image/아우터모음/아우터_2.png" style="position:absolute; left:650px; top:300px;" draggable="true">
+        <img id="outer3" class="clothing-item" src="image/아우터모음/아우터_1.png" style="position:absolute; left:710px; top:300px;" draggable="true">
+
+    </div>
+
+
+    <div class="accs">
+        <img id="acc1" class="clothing-item" src="image/액세서리모음/가방_1.png" style="position:absolute; left:730px; top:450px;" draggable="true">
+        <img id="acc2" class="clothing-item" src="image/액세서리모음/목걸이_1.png" style="position:absolute; left:640px; top:200px;" draggable="true">
+        <img id="acc3" class="clothing-item" src="image/액세서리모음/목걸이_2.png" style="position:absolute; left:700px; top:200px;" draggable="true">
+        <img id="acc4" class="clothing-item" src="image/액세서리모음/팔찌_1.png" style="position:absolute; left:750px; top:200px;" draggable="true">
+        <img id="acc5" class="clothing-item" src="image/액세서리모음/벨트_1.png" style="position:absolute; left:600px; top:540px;" draggable="true">
+        <img id="acc6" class="clothing-item" src="image/액세서리모음/벨트_2.png" style="position:absolute; left:600px; top:600px;" draggable="true">
+    </div>
+
+    <div class="hats">
+        <img id="hat1" class="clothing-item" src="image/액세서리모음/헤어장식_1.png" style="position:absolute; left:610px; top:100px;" draggable="true">
+        <img id="hat2" class="clothing-item" src="image/액세서리모음/헤어장식_2.png" style="position:absolute; left:670px; top:100px;" draggable="true">
+        <img id="hat3" class="clothing-item" src="image/액세서리모음/헤어장식_4.png" style="position:absolute; left:730px; top:100px;" draggable="true">
+        <img id="hat4" class="clothing-item" src="image/액세서리모음/헤어장식_3.png" style="position:absolute; left:720px; top:200px;" draggable="true">
+    </div>
+
+
+    <!--============================================================================================-->
+    <!--버튼모음-->
+    <ul class="btns">
+        <li>
+            <a href="game.html">
+                <img class="replay" src="image/버튼모음/버튼_원래대로.png">
+            </a>
+        </li>
+        <li>
+            <img class="popup_toggle" src="image/버튼모음/버튼_팝업버튼.png">
+        </li>
+        <li id="zoom-button">
+            <img class="capture" src="image/버튼모음/버튼_캡쳐.png">
+        </li>
+        <li>
+            <img src="image/버튼모음/버튼_음소거.png" alt="음악 켜기" id="sound-toggle">
+        </li>
+
+
+    </ul>
+    <img class="popup" src="image/게임그래픽/팝업창.png" style="display:none;">
+    <!-- 플래시 효과 -->
+    <div class="flash"></div>
+    <audio id="bg-music" loop>
+        <source src="audio/MP_Slowlife%20(Full%20Version).mp3" type="audio/mpeg">
+    </audio>
+<!--    이 영상은 뮤팟에서 제공한 음원 소스를 사용했습니다.
+Slowlife (Full Version)- Download: mewc.at/songs/6153-->
+
+
+
+    <!--<div id="remove-btn">-->
+    <!--    <a href="0506.html">-->
+    <!--        <img src="image/버튼모음/버튼_원래대로.png">-->
+    <!--    </a>-->
+    <!--</div>-->
+    <!--<div class="guide"><img src="image/버튼예시.png" width="50px">가이드버튼</div>-->
+    <!--<button id="zoom-button">확대 및 캡처</button>-->
+
+
+
+
+
+
+
+
+    <!--    화면 캡쳐 플러그인을 사용했습니다. -->
+    <!-- html2canvas 라이브러리 (출처: https://github.com/niklasvh/html2canvas) -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <!-- Custom script 파일 -->
+    <!--    <script src="script.js"></script>-->
+
+    <!--============================================================================================-->
+    <!--자바스크립트-->
+    <script>
+        // 음악 재생
+
+        const bgMusic = document.getElementById('bg-music');
+        const soundToggle = document.getElementById('sound-toggle');
+
+        soundToggle.addEventListener('click', function() {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                soundToggle.src = "image/버튼모음/버튼_음악재생중.png"; // 음악 켜기 이미지로 변경
+            } else {
+                bgMusic.pause();
+                soundToggle.src = "image/버튼모음/버튼_음소거.png"; // 음악 끄기 이미지로 변경
+            }
+        });
+
+
+        // =========================================================================================================
+        // 배경 선택
+        let body = document.querySelector('body');
+        let img = document.querySelectorAll('.thumb img');
+        img.forEach(img => {
+            img.addEventListener('click', () => {
+                body.style.backgroundImage = 'url(' + img.src + ')'
+            })
+        })
+
+
+        // 로드 시 첫번째 배경 적용
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     var box = document.getElementById("backgroundBox");
+        //     box.style.backgroundImage = "url('image/배경모음/배경1.png')";
+        // });
+
+
+
+
+// ====================================================================================================================
+        // 모델 이미지 슬라이드
+        let modelContainer = document.querySelector('.model');
+        let modelImages = document.querySelectorAll('.model-img');
+        let currentIndex = 0;
+
+        document.getElementById('slide-left').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                modelContainer.scrollBy({
+                    left: -modelImages[currentIndex].width - 10, // 이미지 너비 + 마진
+                    behavior: 'smooth'
+                });
+            }
+        });
+
+
+        document.getElementById('slide-right').addEventListener('click', () => {
+            if (currentIndex < modelImages.length - 1) {
+                currentIndex++;
+                modelContainer.scrollBy({
+                    left: modelImages[currentIndex].width + 10, // 이미지 너비 + 마진
+                    behavior: 'smooth'
+                });
+            }
+        });
+
+
+
+        // ====================================================================================================================
+        // 모델 이미지 클릭 시 변경
+        let modelImage = document.querySelector('#model img');
+        modelImages.forEach(thumbnail => {
+            thumbnail.addEventListener('click', () => {
+                modelImage.src = thumbnail.src;
+            });
+        });
+
+
+
+
+
+
+        // ====================================================================================================================
+
+        // 옷 아이템 드래그
+        let hairs = document.querySelector('.hairs');
+        let tops = document.querySelector('.tops');
+        let bottoms = document.querySelector('.bottoms');
+        let socks = document.querySelector('.socks');
+        let shoes = document.querySelector('.shoes');
+        let outers = document.querySelector('.outers');
+        let accs = document.querySelector('.accs');
+        let hats = document.querySelector('.hats');
+
+        [hairs, tops, bottoms, socks, shoes, outers, accs, hats].forEach(item => {
+            item.addEventListener('mousedown', function (e) {
+                let target = e.target;
+                if (target.tagName === 'IMG') {
+                    let offsetX = e.clientX - target.getBoundingClientRect().left;
+                    let offsetY = e.clientY - target.getBoundingClientRect().top;
+
+                    function move(e) {
+                        target.style.left = e.clientX - offsetX + 'px';
+                        target.style.top = e.clientY - offsetY + 'px';
+                    }
+
+                    function up() {
+                        document.removeEventListener('mousemove', move);
+                        document.removeEventListener('mouseup', up);
+                    }
+
+                    document.addEventListener('mousemove', move);
+                    document.addEventListener('mouseup', up);
+                }
+            });
+        });
+
+
+
+        <!--============================================================================================-->
+        // 팝업 토글
+        document.addEventListener("DOMContentLoaded", function() {
+            var popupButton = document.querySelector('.popup_toggle');
+            var popupImage = document.querySelector('.popup');
+
+            popupButton.addEventListener('click', function() {
+                if (popupImage.style.display === 'none' || popupImage.style.display === '') {
+                    popupImage.style.display = 'block';
+                } else {
+                    popupImage.style.display = 'none';
+                }
+            });
+        });
+
+
+
+        <!--============================================================================================-->
+        // 비디오가 끝나면 게임 컨테이너로 전환
+        document.getElementById('intro-video').addEventListener('ended', function () {
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+        });
+
+
+        <!--============================================================================================-->
+        // z-index . 마지막에 누른 아이템이 높아지도록
+        let highestZIndex = 1; // 초기 z-index 설정
+        const items = document.querySelectorAll('.clothing-item');
+
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                highestZIndex++;
+                item.style.zIndex = highestZIndex;
+            });
+        });
+
+
+
+
+
+
+
+        <!--============================================================================================-->
+        // 화면 캡쳐 및 플래시 효과
+        document.getElementById('zoom-button').addEventListener('click', function() {
+            const flash = document.querySelector(".flash");
+
+            // 플래시 효과 시작
+            flash.classList.add("active");
+
+            // 0.5초 후 플래시 효과가 끝나면 캡처 실행
+            setTimeout(() => {
+                flash.classList.remove("active");
+
+                // 캡쳐 부분
+                html2canvas(document.getElementById('game-container')).then(function(canvas) {
+                    // 캡처된 이미지 다운로드
+                    let link = document.createElement('a');
+                    link.download = 'capture.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            }, 500);
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+
+
+    <!-- 게임 컨테이너 -->
+</div>
+</body>
+</html>
